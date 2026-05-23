@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, NavLink, useNavigate } from 'react-router-dom';
 import MobileToggle from './MobileToggle';
-import { Bell, Search, User, Users, Users2, DollarSign, Settings } from 'lucide-react';
+import { Bell, Search, User, Users, Users2, DollarSign, Settings, FileText } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -27,6 +27,7 @@ export default function Header() {
     { name: 'العملاء', icon: <Users size={16} />, path: '/admin/customers' },
     { name: 'الفريق', icon: <Users2 size={16} />, path: '/admin/staff' },
     { name: 'المالية', icon: <DollarSign size={16} />, path: '/admin/finances' },
+    { name: 'التأكيدات', icon: <FileText size={16} />, path: '/receipts' },
     { name: 'الإعدادات', icon: <Settings size={16} />, path: '/admin/settings' },
   ];
 
