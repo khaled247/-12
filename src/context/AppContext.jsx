@@ -473,6 +473,9 @@ export function AppProvider({ children }) {
       userReminders,
       addUserReminder,
       removeUserReminder,
+      // receipts
+      getUserReceipts,
+      clearUserReceipts,
       // queue reorder
       reorderQueue,
     }}>
