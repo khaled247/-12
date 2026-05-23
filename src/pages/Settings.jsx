@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
 import { Store, Clock, Globe, Bell, Shield, Smartphone, Palette, ArrowLeft } from 'lucide-react';
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { state, dispatch } = useApp();
+  const [form, setForm] = useState({ name: '', phone: '', address: '' });
+
+  useEffect(() => {
+    if (state && state.salon) setForm({ name: state.salon.name || '', phone: state.salon.phone || '', address: state.salon.address || '' });
+  }, [state.salon]);
 
   return (
     <div style={{ padding: '2rem', direction: 'rtl' }}>
@@ -31,18 +38,18 @@ export default function Settings() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div>
               <label>اسم الصالون</label>
-              <input type="text" className="input-field" defaultValue="صدام العالمي" />
+              <input type="text" className="input-field" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
             </div>
             <div>
               <label>رقم التواصل الأساسي</label>
-              <input type="text" className="input-field" defaultValue="+966 50 123 4567" dir="ltr" />
+              <input type="text" className="input-field" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} dir="ltr" />
             </div>
             <div>
               <label>عنوان الصالون</label>
-              <textarea className="input-field" rows="2" defaultValue="طريق الملك فهد، الرياض، المملكة العربية السعودية"></textarea>
+              <textarea className="input-field" rows="2" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })}></textarea>
             </div>
           </div>
-          <button className="btn-gold" style={{ marginTop: '1.5rem', width: '100%', justifyContent: 'center' }}>حفظ التعديلات</button>
+          <button className="btn-gold" onClick={() => { dispatch({ type: 'UPDATE_SALON', payload: form }); alert('تم حفظ إعدادات الصالون'); }} style={{ marginTop: '1.5rem', width: '100%', justifyContent: 'center' }}>حفظ التعديلات</button>
         </div>
 
         {/* Operating Hours */}

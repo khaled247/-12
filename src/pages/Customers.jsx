@@ -97,7 +97,7 @@ export default function Customers() {
                     <div style={{ color: 'var(--muted)', fontSize: '0.72rem', marginTop: '0.1rem' }}>زيارة</div>
                   </div>
                   <div style={{ textAlign: 'center', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', borderRadius: 10 }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--gold)' }}>${c.totalSpent}</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--gold)' }}>—</div>
                     <div style={{ color: 'var(--muted)', fontSize: '0.72rem', marginTop: '0.1rem' }}>إجمالي</div>
                   </div>
                   <div style={{ textAlign: 'center', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', borderRadius: 10 }}>
@@ -130,7 +130,7 @@ export default function Customers() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
               <div style={{ padding: '0.75rem', borderRadius: 10, background: 'rgba(0,0,0,0.12)' }}>
                 <div style={{ fontWeight: 800 }}>{selected.visits} زيارة</div>
-                <div style={{ color: 'var(--muted)', marginTop: '0.35rem' }}>إجمالي المدفوعات: <strong style={{ color: 'var(--gold)' }}>${selected.totalSpent}</strong></div>
+                <div style={{ color: 'var(--muted)', marginTop: '0.35rem' }}>إجمالي المدفوعات: <strong style={{ color: 'var(--gold)' }}>—</strong></div>
                 <div style={{ color: 'var(--muted)', marginTop: '0.35rem' }}>آخر زيارة: {selected.lastVisit || '—'}</div>
               </div>
 
@@ -151,7 +151,7 @@ export default function Customers() {
                       <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{a.services.map(id=> (state.services.find(s=>s.id===id)||{name:id}).name).join(', ')}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 800, color: 'var(--gold)' }}>${a.totalPrice}</div>
+                      <div style={{ fontWeight: 800, color: 'var(--gold)' }}>{a.totalDuration} د</div>
                       <div style={{ color: a.status === 'cancelled' ? 'var(--danger)' : 'var(--muted)', fontSize: '0.78rem' }}>{a.status}</div>
                     </div>
                   </div>

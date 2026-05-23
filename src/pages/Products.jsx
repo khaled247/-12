@@ -72,8 +72,8 @@ export default function Products() {
     const saved = localStorage.getItem('royalcuts_products');
     if (saved) return JSON.parse(saved);
     return [
-      { id: 'p1', name: 'زيت اللحية الفاخر', price: 45, stock: 20, description: 'زيت طبيعي 100% لتغذية وتنعيم اللحية.', image: '' },
-      { id: 'p2', name: 'دهن شعر كلاسيكي', price: 35, stock: 15, description: 'دهن شعر لتثبيت قوي ولمعان طبيعي طوال اليوم.', image: '' }
+      { id: 'p1', name: 'زيت اللحية الفاخر', price: 45, stock: 20, description: 'زيت طبيعي 100% لتغذية وتنعيم اللحية.', image: '', createdAt: Date.now() - 2000 },
+      { id: 'p2', name: 'دهن شعر كلاسيكي', price: 35, stock: 15, description: 'دهن شعر لتثبيت قوي ولمعان طبيعي طوال اليوم.', image: '', createdAt: Date.now() - 1000 }
     ];
   });
   const [editingProduct, setEditingProduct] = useState(null);
@@ -87,9 +87,10 @@ export default function Products() {
   const handleSave = (prod) => {
     let newProducts;
     if (editingProduct) {
-      newProducts = products.map(p => p.id === prod.id ? prod : p);
+      // preserve createdAt when editing
+      newProducts = products.map(p => p.id === prod.id ? { ...prod, createdAt: p.createdAt || Date.now() } : p);
     } else {
-      newProducts = [...products, prod];
+      newProducts = [...products, { ...prod, createdAt: prod.createdAt || Date.now() }];
     }
     saveProducts(newProducts);
     setIsModalOpen(false);
@@ -139,8 +140,7 @@ export default function Products() {
             <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '0.25rem' }}>{p.name}</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: 1.5, flex: 1 }}>{p.description}</p>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--gold)' }}>{p.price} <span style={{ fontSize: '0.8rem' }}>ريال</span></span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
               <span style={{ fontSize: '0.85rem', color: p.stock > 0 ? 'var(--info)' : 'var(--danger)' }}>
                 {p.stock > 0 ? `متوفر: ${p.stock}` : 'نفدت الكمية'}
               </span>

@@ -47,7 +47,7 @@ export default function Finances() {
               <TrendingUp size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem' }}>${data.todayTotal}</div>
+          <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem' }}>—</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--success)', fontSize: '0.8rem', fontWeight: 700 }}>
             <ArrowUpRight size={14} /> 12% مقارنة بأمس
           </div>
@@ -60,7 +60,7 @@ export default function Finances() {
               <CalendarIcon size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem' }}>${data.weekTotal}</div>
+          <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem' }}>—</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--success)', fontSize: '0.8rem', fontWeight: 700 }}>
             <ArrowUpRight size={14} /> 8.5% مقارنة بالأسبوع الماضي
           </div>
@@ -73,7 +73,7 @@ export default function Finances() {
               <DollarSign size={18} />
             </div>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem' }}>${data.total}</div>
+          <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem' }}>—</div>
           <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>
             من {data.count} موعد مكتمل
           </div>
@@ -105,7 +105,7 @@ export default function Finances() {
                   <td style={{ fontWeight: 700 }}>{apt.customerName}</td>
                   <td style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{apt.services.length} خدمة</td>
                   <td><span className="badge badge-completed">مدفوع</span></td>
-                  <td style={{ color: 'var(--gold)', fontWeight: 800 }}>${apt.totalPrice}</td>
+                  <td style={{ color: 'var(--gold)', fontWeight: 800 }}>—</td>
                 </tr>
               ))}
               {state.appointments.filter(a => a.status === 'completed').length === 0 && (

@@ -58,8 +58,7 @@ function StepServices({ selected, onToggle, total }) {
               </div>
               <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.25rem' }}>{svc.name}</div>
               <div style={{ color: 'var(--muted)', fontSize: '0.78rem', marginBottom: '0.5rem', lineHeight: 1.4 }}>{svc.description}</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '1rem' }}>${svc.price}</span>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.8rem' }}>
                 <span style={{ color: 'var(--muted)', fontSize: '0.78rem' }}>{svc.duration} min</span>
               </div>
             </div>
@@ -70,7 +69,7 @@ function StepServices({ selected, onToggle, total }) {
       {total.price > 0 && (
         <div style={{ marginTop: '1.25rem', padding: '1rem', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Total: <strong style={{ color: 'var(--text)' }}>{selected.length} service(s) • {total.duration} min</strong></span>
-          <span style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '1.2rem' }}>${total.price}</span>
+          <span style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '1.2rem' }}></span>
         </div>
       )}
     </div>
@@ -201,15 +200,14 @@ function StepConfirm({ booking, onChange }) {
         </div>
         <div style={{ borderTop: '1px solid var(--border)', marginTop: '1rem', paddingTop: '1rem' }}>
           <div style={{ color: 'var(--muted)', fontSize: '0.78rem', marginBottom: '0.5rem' }}>الخدمات المطلوبة</div>
-          {services.map(s => (
+            {services.map(s => (
             <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
               <span>{s.icon} {s.name}</span>
-              <span style={{ color: 'var(--gold)', fontWeight: 600 }}>${s.price}</span>
             </div>
           ))}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
             <span>الإجمالي</span>
-            <span style={{ color: 'var(--gold)' }}>${booking.totalPrice}</span>
+            <span style={{ color: 'var(--gold)' }}>{booking.totalDuration} دقيقة</span>
           </div>
         </div>
       </div>
@@ -317,8 +315,9 @@ export default function BookingWizard({ onClose, onSuccess }) {
     if (!customerName.trim()) { setError('يرجى إدخال الاسم الكامل.'); return; }
     if (!phoneRegexValid(customerPhone)) { setError('يرجى إدخال رقم جوال صالح، مثال: 0501234567'); return; }
     setSubmitting(true);
+    const customerEmail = auth?.user?.email;
     try {
-      const apt = createAppointment({ barberId, services: selectedServices, date, time, totalPrice: totals.price, totalDuration: totals.duration, customerName: customerName.trim(), customerPhone: customerPhone.trim(), notes });
+      const apt = createAppointment({ barberId, services: selectedServices, date, time, totalPrice: totals.price, totalDuration: totals.duration, customerName: customerName.trim(), customerPhone: customerPhone.trim(), customerEmail, notes });
       setSuccess(true);
       setSuccessApt(apt);
       setSubmitting(false);

@@ -161,8 +161,7 @@ export default function Services() {
             </div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '0.4rem' }}>{svc.name}</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.85rem', lineHeight: 1.6, flex: 1, marginBottom: '1.25rem' }}>{svc.description}</p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-              <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--gold)' }}>${svc.price}</span>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--muted)', fontSize: '0.82rem' }}>
                 <Clock size={14} /> {svc.duration} دقيقة
               </span>

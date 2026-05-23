@@ -21,6 +21,8 @@ export default function Header() {
     return 'الإدارة';
   };
 
+  const { state } = useApp();
+
   const secondaryMenu = [
     { name: 'العملاء', icon: <Users size={16} />, path: '/admin/customers' },
     { name: 'الفريق', icon: <Users2 size={16} />, path: '/admin/staff' },
@@ -39,7 +41,7 @@ export default function Header() {
           <div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>{getPageTitle()}</h2>
           <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.2rem' }}>
-            صدام العالمي / {getPageTitle()}
+            {state?.salon?.name || 'صدام العالمي'} / {getPageTitle()}
           </div>
         </div>
 

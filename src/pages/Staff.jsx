@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { ArrowLeft, UserPlus, Star, Edit2, Trash2, Clock, X } from 'lucide-react';
+import ImageUploader from '../components/ImageUploader';
 
 function BarberModal({ barber, onClose, onSave }) {
   const [formData, setFormData] = useState(
@@ -36,8 +37,30 @@ function BarberModal({ barber, onClose, onSave }) {
           </div>
 
           <div>
-            <label>رابط الصورة (اختياري)</label>
-            <input type="url" className="input-field" placeholder="https://example.com/image.jpg أو ضع /barber.png" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} />
+            <label>صورة الحلاق (رفع أو اختيار)</label>
+            <ImageUploader onChange={(val) => setFormData({ ...formData, image: val || '' })} />
+
+            <div style={{ marginTop: '0.6rem', color: 'var(--muted)', fontSize: '0.85rem' }}>أو اختر من المعرض:</div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem' }}>
+              {['/barber.png', '/service.png', '/hero.png'].map(src => (
+                <img
+                  key={src}
+                  src={src}
+                  alt="gallery"
+                  onClick={() => setFormData({ ...formData, image: src })}
+                  style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, cursor: 'pointer', border: formData.image === src ? '2px solid var(--gold)' : '2px solid transparent' }}
+                />
+              ))}
+            </div>
+
+            {formData.image ? (
+              <div style={{ marginTop: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <img src={formData.image} alt="preview" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 10 }} />
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button type="button" className="btn-ghost" onClick={() => setFormData({ ...formData, image: '' })}>إزالة</button>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div style={{ display: 'flex', gap: '1rem' }}>

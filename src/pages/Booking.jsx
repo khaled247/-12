@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, User, Scissors } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -7,7 +7,8 @@ export default function Booking() {
   const navigate = useNavigate();
   const { state, createAppointment, createQueueTicket, timeSlots, isSlotAvailable, auth } = useApp();
   const [date, setDate] = useState('');
-  const [barberId, setBarberId] = useState('');
+  const location = useLocation();
+  const [barberId, setBarberId] = useState(location.state?.barberId || '');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [serviceId, setServiceId] = useState('');
@@ -33,22 +34,27 @@ export default function Booking() {
     if (!selectedService) return;
 
     const totalDuration = selectedService.duration || 30;
+    const customerEmail = auth?.user?.email;
     // find earliest available time slot for chosen barber on date
     const chosenBarber = barberId || (state.barbers[0] && state.barbers[0].id);
     const available = timeSlots.find(slot => isSlotAvailable(chosenBarber, date, slot, totalDuration));
     if (available) {
       try {
-        const apt = createAppointment({ barberId: chosenBarber, services: [serviceId], date, time: available, totalPrice: selectedService.price, totalDuration, customerName: customerName, customerPhone: customerPhone, notes: '' });
+        const apt = createAppointment({ barberId: chosenBarber, services: [serviceId], date, time: available, totalPrice: selectedService.price, totalDuration, customerName: customerName, customerPhone: customerPhone, customerEmail, notes: '' });
         setConfirmedApt(apt);
         return;
       } catch (e) {
-        // fallback to queue if createAppointment fails
+        if (e.message) return alert(e.message);
       }
     }
 
     // if no available time, create a queue ticket
-    const ticket = createQueueTicket({ customerName: customerName, customerPhone: customerPhone, barberId: chosenBarber });
-    setConfirmedApt(ticket);
+    try {
+      const ticket = createQueueTicket({ customerName: customerName, customerPhone: customerPhone, customerEmail, barberId: chosenBarber });
+      setConfirmedApt(ticket);
+    } catch (e) {
+      if (e.message) return alert(e.message);
+    }
   };
 
   const formatBookingTime = (iso) => {
@@ -91,10 +97,7 @@ export default function Booking() {
                     {confirmedApt.createdAt ? formatBookingTime(confirmedApt.createdAt) : (confirmedApt.time ? confirmedApt.time : (confirmedApt.queueNumber ? `رقم ${confirmedApt.queueNumber} (في الطابور)` : '—'))}
                   </div>
                 </div>
-                <div style={{ minWidth: 100 }}>
-                  <div style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>السعر</div>
-                  <div style={{ fontWeight: 700, color: 'var(--gold)' }}>${confirmedApt.totalPrice}</div>
-                </div>
+                {/* السعر مخفي */}
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button className="btn-gold" onClick={() => { navigate('/'); }} style={{ padding: '0.7rem 1rem' }}>العودة للرئيسية</button>
@@ -111,7 +114,7 @@ export default function Booking() {
             <select className="input-field" value={serviceId} onChange={e => setServiceId(e.target.value)} required>
               <option value="">اختر خدمة...</option>
               {state.services.map(s => (
-                <option key={s.id} value={s.id}>{s.name} - ${s.price}</option>
+                <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
           </div>

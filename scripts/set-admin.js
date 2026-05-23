@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const admin = require('firebase-admin');
-const fs = require('fs');
-const path = require('path');
+import admin from 'firebase-admin';
+import fs from 'fs';
+import path from 'path';
 
 function usage() {
   console.log('Usage: node scripts/set-admin.js <email> [serviceAccountPath]');
@@ -22,7 +22,7 @@ if (!fs.existsSync(keyPath)) {
   process.exit(1);
 }
 
-const serviceAccount = require(keyPath);
+const serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),

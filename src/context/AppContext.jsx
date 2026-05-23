@@ -62,6 +62,8 @@ function appReducer(state, action) {
       };
     case 'DELETE_APPOINTMENT':
       return { ...state, appointments: state.appointments.filter(a => a.id !== action.payload) };
+    case 'SET_APPOINTMENTS':
+      return { ...state, appointments: action.payload };
     case 'ADD_SERVICE':
       return { ...state, services: [...state.services, action.payload] };
     case 'UPDATE_SERVICE':
@@ -74,6 +76,8 @@ function appReducer(state, action) {
       return { ...state, barbers: state.barbers.map(b => b.id === action.payload.id ? action.payload : b) };
     case 'DELETE_BARBER':
       return { ...state, barbers: state.barbers.filter(b => b.id !== action.payload) };
+    case 'UPDATE_SALON':
+      return { ...state, salon: { ...state.salon, ...action.payload } };
     default:
       return state;
   }
@@ -104,11 +108,42 @@ export function AppProvider({ children }) {
     appointments: saved?.appointments ?? SAMPLE_APPOINTMENTS,
     services: saved?.services ?? INITIAL_SERVICES,
     barbers: saved?.barbers ?? INITIAL_BARBERS,
+    salon: saved?.salon ?? { name: 'صدام العالمي', phone: '+966 50 123 4567', address: 'طريق الملك فهد، الرياض، المملكة العربية السعودية' },
   });
 
   // Authentication state (simple client-side wrapper)
   const savedAuth = loadAuth();
   const [auth, setAuth] = useState(savedAuth);
+  // Toasts state
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (toast) => {
+    const id = `t_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+    setToasts(prev => [...prev, { id, ...toast }]);
+    // auto remove
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), (toast.duration || 5500));
+  };
+
+  // User reminders (stored per user, simple localStorage)
+  const [userReminders, setUserReminders] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('royalcuts_user_reminders') || '{}'); } catch { return {}; }
+  });
+
+  const saveUserReminders = (next) => {
+    setUserReminders(next);
+    try { localStorage.setItem('royalcuts_user_reminders', JSON.stringify(next)); } catch {}
+  };
+
+  const addUserReminder = (aptId, minutesBefore) => {
+    const next = { ...userReminders, [aptId]: { aptId, minutesBefore } };
+    saveUserReminders(next);
+  };
+
+  const removeUserReminder = (aptId) => {
+    const next = { ...userReminders };
+    delete next[aptId];
+    saveUserReminders(next);
+  };
 
   useEffect(() => {
     localStorage.setItem('royalcuts_auth', JSON.stringify(auth));
@@ -117,6 +152,93 @@ export function AppProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('royalcuts_state', JSON.stringify(state));
   }, [state]);
+
+  // --- Local reminders/notifications scheduler ---
+  useEffect(() => {
+    let notified = [];
+    try { notified = JSON.parse(localStorage.getItem('royalcuts_notified') || '[]'); } catch { notified = []; }
+
+    const saveNotified = () => localStorage.setItem('royalcuts_notified', JSON.stringify(notified));
+
+    const showInAppToast = (title, body, opts = {}) => {
+      try {
+        addToast({ title, body, duration: opts.duration || 5500 });
+      } catch (e) { console.warn('toast failed', e); }
+    };
+
+    const trySystemNotify = (title, body) => {
+      try {
+        if (!('Notification' in window)) return;
+        if (Notification.permission === 'granted') {
+          new Notification(title, { body });
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then(p => { if (p === 'granted') new Notification(title, { body }); });
+        }
+      } catch (e) { console.warn('system notify failed', e); }
+    };
+
+    const checkReminders = () => {
+      if (!auth?.isAuthenticated) return;
+      const now = new Date();
+      // find appointments for this user
+      const userAppointments = state.appointments.filter(a => {
+        if (auth.user?.email && a.customerEmail && a.customerEmail === auth.user.email) return true;
+        if (auth.user?.phone && a.customerPhone && a.customerPhone === auth.user.phone) return true;
+        return false;
+      });
+
+      userAppointments.forEach(apt => {
+        if (notified.includes(apt.id)) return; // already notified
+
+        // 1) Queue-based reminder: if the appointment has a queueNumber (ticket)
+        if (typeof apt.queueNumber === 'number') {
+          const before = state.appointments.filter(a => a.barberId === apt.barberId && a.date === apt.date && (a.status === 'active' || a.status === 'pending') && typeof a.queueNumber === 'number' && a.queueNumber < apt.queueNumber).length;
+          if (before <= 2) {
+            const title = 'تذكير: قرب دورك';
+            const body = `تبقى أمامك ${before} شخص${before === 1 ? '' : 'ان'} فقط. استعد.`;
+            showInAppToast(title, body);
+            trySystemNotify(title, body);
+            notified.push(apt.id);
+            saveNotified();
+          }
+          return;
+        }
+
+        // 2) Time-based reminder: check user-set reminders first
+        const userRem = userReminders[apt.id];
+        if (userRem && apt.date && apt.time) {
+          const [h, m] = apt.time.split(':').map(Number);
+          const aptDate = new Date(apt.date + 'T' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':00');
+          const diffMin = (aptDate - now) / 60000;
+          if (diffMin <= userRem.minutesBefore && diffMin >= 0) {
+            const title = 'تذكير بموعدك';
+            const body = `موعدك بعد ${Math.round(diffMin)} دقيقة. تأكد من الوصول في الوقت.`;
+            showInAppToast(title, body);
+            trySystemNotify(title, body);
+            notified.push(apt.id);
+            saveNotified();
+          }
+        } else if (apt.date && apt.time) {
+          const [h, m] = apt.time.split(':').map(Number);
+          const aptDate = new Date(apt.date + 'T' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':00');
+          const diffMin = (aptDate - now) / 60000;
+          if (diffMin <= 30 && diffMin >= 0) {
+            const title = 'تذكير بموعدك';
+            const body = `موعدك بعد ${Math.round(diffMin)} دقيقة. تأكد من الوصول في الوقت.`;
+            showInAppToast(title, body);
+            trySystemNotify(title, body);
+            notified.push(apt.id);
+            saveNotified();
+          }
+        }
+      });
+    };
+
+    // run immediately and then every 30s
+    checkReminders();
+    const id = setInterval(checkReminders, 30000);
+    return () => clearInterval(id);
+  }, [state.appointments, auth]);
 
   // ── Helpers ──
   const getBookedSlots = (barberId, date) => {
@@ -149,12 +271,35 @@ export function AppProvider({ children }) {
     return true;
   };
 
+  const hasExistingBooking = (customerPhone, customerEmail) => {
+    if (!customerPhone && !customerEmail) return false;
+    const today = new Date().toISOString().split('T')[0];
+    const activeStatuses = ['confirmed', 'active', 'pending'];
+    return state.appointments.some(a =>
+      activeStatuses.includes(a.status) &&
+      a.date >= today &&
+      ((customerPhone && a.customerPhone === customerPhone) || (customerEmail && a.customerEmail === customerEmail))
+    );
+  };
+
   const createAppointment = (data) => {
+    if (hasExistingBooking(data.customerPhone, data.customerEmail)) {
+      throw new Error('لديك حجز قائم بالفعل. لا يمكنك حجز أكثر من مرة.');
+    }
     if (!isSlotAvailable(data.barberId, data.date, data.time, data.totalDuration)) {
       throw new Error('This time slot is already booked. Please choose another time.');
     }
     const newApt = { ...data, id: `a_${Date.now()}`, status: 'confirmed', createdAt: new Date().toISOString() };
     dispatch({ type: 'ADD_APPOINTMENT', payload: newApt });
+    try {
+      // Save a client-visible receipt for later lookup
+      const raw = localStorage.getItem('royalcuts_receipts');
+      const receipts = raw ? JSON.parse(raw) : {};
+      const key = auth?.user?.email || auth?.user?.phone || 'guest';
+      receipts[key] = receipts[key] || [];
+      receipts[key].push({ id: newApt.id, createdAt: newApt.createdAt, barberId: newApt.barberId, date: newApt.date, time: newApt.time, services: newApt.services, totalDuration: newApt.totalDuration, totalPrice: newApt.totalPrice, customerName: newApt.customerName, customerPhone: newApt.customerPhone, notes: newApt.notes, salon: state.salon });
+      localStorage.setItem('royalcuts_receipts', JSON.stringify(receipts));
+    } catch (e) { console.warn('failed to persist receipt', e); }
     return newApt;
   };
 
@@ -214,7 +359,10 @@ export function AppProvider({ children }) {
     }
   };
 
-  const createQueueTicket = ({ customerName, customerPhone, barberId }) => {
+  const createQueueTicket = ({ customerName, customerPhone, customerEmail, barberId }) => {
+    if (hasExistingBooking(customerPhone, customerEmail)) {
+      throw new Error('لديك حجز قائم بالفعل. لا يمكنك حجز أكثر من مرة.');
+    }
     const today = new Date().toISOString().split('T')[0];
     // get last queue number for today
     const todays = state.appointments.filter(a => a.date === today && typeof a.queueNumber === 'number');
@@ -230,6 +378,7 @@ export function AppProvider({ children }) {
       customerId: null,
       customerName: customerName || 'زبون',
       customerPhone: customerPhone || '',
+      customerEmail: customerEmail || null,
       barberId: barberId || (state.barbers[0] && state.barbers[0].id),
       services: [],
       date: today,
@@ -251,6 +400,48 @@ export function AppProvider({ children }) {
     setAuth({ isAuthenticated: true, user, role });
     localStorage.setItem('isAuthenticated', 'true');
     if (role) localStorage.setItem('userRole', role);
+  };
+
+  // Receipts: store simple confirmations per user so clients can view later
+  const getUserReceipts = (userKey) => {
+    try {
+      const raw = localStorage.getItem('royalcuts_receipts');
+      const receipts = raw ? JSON.parse(raw) : {};
+      const key = userKey || auth?.user?.email || auth?.user?.phone || 'guest';
+      return receipts[key] || [];
+    } catch (e) { return []; }
+  };
+
+  const clearUserReceipts = (userKey) => {
+    try {
+      const raw = localStorage.getItem('royalcuts_receipts');
+      if (!raw) return;
+      const receipts = JSON.parse(raw);
+      const key = userKey || auth?.user?.email || auth?.user?.phone || 'guest';
+      delete receipts[key];
+      localStorage.setItem('royalcuts_receipts', JSON.stringify(receipts));
+    } catch (e) { console.warn('clear receipts failed', e); }
+  };
+
+  // Reorder queue tickets for a barber on a specific date.
+  const reorderQueue = (barberId, date, orderedIds) => {
+    try {
+      // build a map for quick lookup
+      const byId = Object.fromEntries(state.appointments.map(a => [a.id, { ...a }]));
+      // assign new queue numbers based on orderedIds (1-based)
+      orderedIds.forEach((id, idx) => {
+        if (!byId[id]) return;
+        byId[id].queueNumber = idx + 1;
+        // first becomes active, others pending
+        byId[id].status = idx === 0 ? 'active' : 'pending';
+        // ensure barberId and date match
+        byId[id].barberId = barberId;
+        byId[id].date = date;
+      });
+      // preserve other appointments unchanged
+      const nextAppointments = state.appointments.map(a => byId[a.id] || a);
+      dispatch({ type: 'SET_APPOINTMENTS', payload: nextAppointments });
+    } catch (e) { console.warn('reorderQueue failed', e); }
   };
 
   const logout = async () => {
@@ -276,6 +467,14 @@ export function AppProvider({ children }) {
       auth,
       login,
       logout,
+      // toasts & reminders
+      toasts,
+      addToast,
+      userReminders,
+      addUserReminder,
+      removeUserReminder,
+      // queue reorder
+      reorderQueue,
     }}>
       {children}
     </AppContext.Provider>

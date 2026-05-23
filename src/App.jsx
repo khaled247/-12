@@ -19,6 +19,9 @@ import BarberPage from './pages/BarberPage';
 import BarberScreen from './pages/BarberScreen';
 import MobileNav from './layouts/MobileNav';
 import './index.css';
+import ToastContainer from './components/ToastContainer';
+import Reminders from './pages/Reminders';
+import MyReceipts from './pages/MyReceipts';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
@@ -55,6 +58,7 @@ function App() {
   return (
     <AppProvider>
       <Router>
+        <ToastContainer />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
@@ -62,6 +66,8 @@ function App() {
           
           {/* Protected Customer Routes */}
           <Route path="/booking" element={<Booking />} />
+          <Route path="/reminders" element={<Reminders />} />
+          <Route path="/receipts" element={<MyReceipts />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={

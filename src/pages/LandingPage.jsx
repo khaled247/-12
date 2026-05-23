@@ -46,7 +46,7 @@ export default function LandingPage() {
             <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}>
               <Scissors size={20} />
             </div>
-            <span style={{ fontSize: '1.3rem', fontWeight: 800 }}>صدام العالمي</span>
+            <span style={{ fontSize: '1.3rem', fontWeight: 800 }}>{state?.salon?.name || 'صدام العالمي'}</span>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             {auth?.isAuthenticated ? (
@@ -143,40 +143,44 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ PRODUCTS GALLERY ═══ */}
-      <section id="products" style={{ padding: '5rem 2rem', background: 'linear-gradient(180deg, var(--bg2), var(--bg))' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }} className="animate-in">
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 1rem', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 50, marginBottom: '1rem', fontSize: '0.82rem', color: 'var(--gold)' }}>
-              <ShoppingBag size={14} /> منتجاتنا الحصرية
-            </div>
-            <h2 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: '0.5rem' }}>عناية متكاملة لمنزلك</h2>
-            <p style={{ color: 'var(--muted)', fontSize: '1rem', maxWidth: 500, margin: '0 auto' }}>اكتشف مجموعتنا الفاخرة من زيوت ودهانات الشعر</p>
-          </div>
-
-          <div className="horizontal-scroll" style={{ display: 'flex', gap: '1.5rem', overflowX: 'auto', paddingBottom: '1rem', snapType: 'x mandatory' }}>
-            {products.map((p, i) => (
-              <div key={p.id} className="glass animate-in" style={{ minWidth: 280, maxWidth: 300, padding: '1.5rem', animationDelay: `${i * 0.1}s`, display: 'flex', flexDirection: 'column', scrollSnapAlign: 'start', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ width: '100%', height: 200, borderRadius: 12, background: 'var(--bg3)', marginBottom: '1.25rem', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {p.image ? (
-                    <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <ShoppingBag size={40} style={{ color: 'var(--muted)', opacity: 0.5 }} />
-                  )}
-                </div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '0.5rem' }}>{p.name}</h3>
-                <p style={{ color: 'var(--muted)', fontSize: '0.88rem', lineHeight: 1.5, flex: 1, marginBottom: '1rem' }}>{p.description}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--gold)' }}>${p.price}</span>
-                  <button className="btn-ghost btn-sm" style={{ padding: '0.5rem 1rem', color: 'var(--text)', borderColor: 'var(--border)' }}>شراء الآن</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* PRODUCTS GALLERY moved below SERVICES */}
 
       {/* ═══ SERVICES ═══ */}
+      {/* ═══ BARBERS / TEAM ═══ */}
+      <section id="barbers" style={{ padding: '4rem 2rem', maxWidth: 1200, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }} className="animate-in">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 1rem', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 50, marginBottom: '1rem', fontSize: '0.82rem', color: 'var(--gold)' }}>
+            💈 فريق المحترفين
+          </div>
+          <h2 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: '0.5rem' }}>التقِ بخبرائنا</h2>
+          <p style={{ color: 'var(--muted)', fontSize: '1rem', maxWidth: 700, margin: '0 auto' }}>حلاقون مختارون بدقة لتقديم أفضل تجربة شخصية ومظهر فريد.</p>
+        </div>
+
+        <div className="horizontal-scroll" style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem', snapType: 'x mandatory' }}>
+          {state.barbers.map((b, i) => (
+            <div key={b.id} className="glass animate-in" style={{ minWidth: 240, maxWidth: 260, padding: '1rem', animationDelay: `${i * 0.06}s`, display: 'flex', flexDirection: 'column', alignItems: 'stretch', scrollSnapAlign: 'start', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: 160, borderRadius: 12, overflow: 'hidden', marginBottom: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg3)' }}>
+                {b.image ? <img src={b.image} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ fontSize: '3rem' }}>💈</div>}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
+                <div>
+                  <div style={{ fontWeight: 900, fontSize: '1.05rem' }}>{b.name}</div>
+                  <div style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>{b.specialty}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 800, color: b.color || 'var(--gold)' }}>{b.rating} ★</div>
+                  <div style={{ color: 'var(--muted)', fontSize: '0.78rem' }}>{b.reviews} تقييم</div>
+                </div>
+              </div>
+              <p style={{ color: 'var(--muted)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '0.9rem', flex: 1 }}>{b.bio || ''}</p>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button className="btn-gold" onClick={() => navigate('/booking', { state: { barberId: b.id } })} style={{ flex: 1, justifyContent: 'center' }}>احجز مع {b.name.split(' ')[0]}</button>
+                <button className="btn-ghost" onClick={() => window.open(`https://wa.me/${(state?.salon?.phone||'').replace(/[^0-9]/g,'')}`, '_blank')} style={{ padding: '0 0.8rem' }}>تواصل</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
       <section id="services" style={{ padding: '5rem 2rem', maxWidth: 1200, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '3rem' }} className="animate-in">
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 1rem', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 50, marginBottom: '1rem', fontSize: '0.82rem', color: 'var(--gold)' }}>
@@ -224,12 +228,7 @@ export default function LandingPage() {
                 </div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '0.5rem' }}>{svc.name}</h3>
                 <p style={{ color: 'var(--muted)', fontSize: '0.88rem', lineHeight: 1.5, flex: 1, marginBottom: '1rem' }}>{svc.description}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--gold)' }}>${svc.price}</span>
-                  <button className="btn-ghost btn-sm" style={{ padding: '0.5rem 1rem', color: 'var(--text)', borderColor: 'var(--border)', display: 'flex', gap: '0.4rem', alignItems: 'center' }} onClick={() => navigate('/booking')}>
-                    <Clock size={14} /> {svc.duration} دقيقة
-                  </button>
-                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}></div>
               </div>
             );
           })}
@@ -237,6 +236,38 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ FOOTER & INFO ═══ */}
+      {/* ═══ PRODUCTS GALLERY (moved below SERVICES) ═══ */}
+      <section id="products" style={{ padding: '5rem 2rem', background: 'linear-gradient(180deg, var(--bg2), var(--bg))' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }} className="animate-in">
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 1rem', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 50, marginBottom: '1rem', fontSize: '0.82rem', color: 'var(--gold)' }}>
+              <ShoppingBag size={14} /> منتجاتنا الحصرية
+            </div>
+            <h2 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: '0.5rem' }}>عناية متكاملة لمنزلك</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '1rem', maxWidth: 500, margin: '0 auto' }}>اكتشف مجموعتنا الفاخرة من زيوت ودهانات الشعر</p>
+          </div>
+
+          <div className="horizontal-scroll" style={{ display: 'flex', gap: '1.5rem', overflowX: 'auto', paddingBottom: '1rem', snapType: 'x mandatory' }}>
+            {[...products].sort((a,b)=> (b.createdAt||0) - (a.createdAt||0)).map((p, i) => (
+              <div key={p.id} className="glass animate-in" style={{ minWidth: 280, maxWidth: 300, padding: '1.5rem', animationDelay: `${i * 0.1}s`, display: 'flex', flexDirection: 'column', scrollSnapAlign: 'start', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: 200, borderRadius: 12, background: 'var(--bg3)', marginBottom: '1.25rem', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {p.image ? (
+                    <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <ShoppingBag size={40} style={{ color: 'var(--muted)', opacity: 0.5 }} />
+                  )}
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '0.5rem' }}>{p.name}</h3>
+                <p style={{ color: 'var(--muted)', fontSize: '0.88rem', lineHeight: 1.5, flex: 1, marginBottom: '1rem' }}>{p.description}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--gold)' }}></span>
+                  <button className="btn-ghost btn-sm" style={{ padding: '0.5rem 1rem', color: 'var(--text)', borderColor: 'var(--border)' }}>شراء الآن</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       <footer style={{ borderTop: '1px solid var(--border)', padding: '4rem 2rem 3rem', background: 'var(--bg2)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '3rem' }}>
           
@@ -246,7 +277,7 @@ export default function LandingPage() {
               <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
                 <Scissors size={20} />
               </div>
-              <h3 style={{ color: 'var(--text)', fontSize: '1.5rem', fontWeight: 900 }}>صدام العالمي</h3>
+              <h3 style={{ color: 'var(--text)', fontSize: '1.5rem', fontWeight: 900 }}>{state?.salon?.name || 'صدام العالمي'}</h3>
             </div>
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem', lineHeight: 1.8, marginBottom: '1.5rem' }}>
               صالون حلاقة فاخر للرجل العصري. تجربة استثنائية تجمع بين الحلاقة الكلاسيكية والعناية الحديثة في كل زيارة.
@@ -273,11 +304,11 @@ export default function LandingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
                 <MapPin size={18} className="gold" style={{ marginTop: '0.2rem' }} />
-                <span>طريق الملك فهد، حي الملقا<br/>الرياض، المملكة العربية السعودية</span>
+                  <span>{state?.salon?.address || 'طريق الملك فهد، حي الملقا\nالرياض، المملكة العربية السعودية'}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <Phone size={18} className="gold" />
-                <span dir="ltr">+966 50 123 4567</span>
+                <span dir="ltr">{state?.salon?.phone || '+966 50 123 4567'}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <MessageCircle size={18} className="gold" />
@@ -289,7 +320,7 @@ export default function LandingPage() {
         </div>
         <div style={{ maxWidth: 1200, margin: '3rem auto 0', paddingTop: '1.5rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
-            © {new Date().getFullYear()} صدام العالمي — جميع الحقوق محفوظة
+            © {new Date().getFullYear()} {state?.salon?.name || 'صدام العالمي'} — جميع الحقوق محفوظة
           </div>
           <div style={{ display: 'flex', gap: '1.5rem', color: 'var(--muted)', fontSize: '0.85rem' }}>
             <span style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--gold)' }} onClick={() => {
@@ -307,7 +338,7 @@ export default function LandingPage() {
 
       {/* Floating WhatsApp Button */}
       <a 
-        href="https://wa.me/966501234567" 
+        href={`https://wa.me/${(state?.salon?.phone || '+966501234567').replace(/[^0-9]/g, '')}`} 
         target="_blank" 
         rel="noreferrer"
         style={{

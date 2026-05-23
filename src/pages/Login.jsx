@@ -14,9 +14,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const OWNER_EMAIL = 'kkooyekk@gmail.com';
   const auth = getAuth(app);
-  const { login, auth: ctxAuth } = useApp();
+  const { login, auth: ctxAuth, state } = useApp();
 
   // Redirect if already authenticated via context
   React.useEffect(() => {
@@ -24,6 +23,9 @@ export default function Login() {
   }, [ctxAuth, navigate]);
 
   const handleGoogleLogin = async () => {
+    if (loading) return;
+    setLoading(true);
+    setError('');
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -31,16 +33,18 @@ export default function Login() {
       // check custom claims for admin
       try {
         const idTokenResult = await user.getIdTokenResult();
-        if (idTokenResult.claims && idTokenResult.claims.admin) user.admin = true;
+        if (idTokenResult.claims?.admin) user.admin = true;
       } catch (e) {
         // ignore token retrieval errors
       }
-      const isOwner = (user && user.admin) || (user && user.email === OWNER_EMAIL);
+      const isOwner = user?.admin === true;
       // save via context
       login({ user, role: isOwner ? 'owner' : 'user' });
       navigate(isOwner ? '/admin' : '/');
     } catch (err) {
       setError('فشل تسجيل الدخول عبر جوجل');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,6 +63,7 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError('');
     try {
@@ -67,9 +72,9 @@ export default function Login() {
       // check custom claims for admin
       try {
         const idTokenResult = await user.getIdTokenResult();
-        if (idTokenResult.claims && idTokenResult.claims.admin) user.admin = true;
+        if (idTokenResult.claims?.admin) user.admin = true;
       } catch (e) {}
-      const isOwner = (user && user.admin) || (user && user.email === OWNER_EMAIL);
+      const isOwner = user?.admin === true;
       login({ user, role: isOwner ? 'owner' : 'user' });
       const from = location.state?.from || (isOwner ? '/admin' : '/');
       navigate(from);
@@ -113,7 +118,7 @@ export default function Login() {
           <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(212,175,55,0.08)', border: '1.5px solid rgba(212,175,55,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', color: 'var(--gold)' }}>
             <Scissors size={32} />
           </div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.25rem' }}>صدام العالمي</h1>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.25rem' }}>{state?.salon?.name || 'صدام العالمي'}</h1>
           <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>لوحة إدارة الصالون</p>
         </div>
 
@@ -138,15 +143,15 @@ export default function Login() {
                   <User size={16} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }} />
                   <input
                     id="username"
-                    type="text"
+                    type="email"
                     className="input-field"
-                    placeholder="admin"
+                    placeholder="admin@example.com"
                     value={username}
                     onChange={e => setUsername(e.target.value)}
                     style={{ paddingRight: '2.75rem' }}
                     required
-                    aria-label="اسم المستخدم"
-                    autoComplete="username"
+                    aria-label="البريد الإلكتروني"
+                    autoComplete="email"
                   />
                 </div>
             </div>
@@ -201,8 +206,8 @@ export default function Login() {
                 type="submit"
                 className="btn-gold"
                 style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem', padding: '1rem', fontSize: '1rem' }}
-                disabled={loading}
-                aria-disabled={loading}
+                disabled={loading || !username || !password}
+                aria-disabled={loading || !username || !password}
               >
                 {loading ? (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>

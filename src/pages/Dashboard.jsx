@@ -19,7 +19,7 @@ export default function Dashboard() {
       { label: 'مواعيد اليوم', value: todayApts.length, icon: <Calendar size={22} />, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', path: '/admin/appointments' },
       { label: 'مؤكّدة', value: confirmed, icon: <CheckCircle size={22} />, color: '#10b981', bg: 'rgba(16,185,129,0.1)', path: '/admin/appointments' },
       { label: 'إجمالي العملاء', value: new Set(state.appointments.map(a => a.customerPhone)).size, icon: <Users size={22} />, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', path: '/admin/customers' },
-      { label: 'إجمالي الإيرادات', value: `$${revenue}`, icon: <DollarSign size={22} />, color: '#d4af37', bg: 'rgba(212,175,55,0.1)', path: '/admin/finances' },
+      { label: 'إجمالي الإيرادات', value: `—`, icon: <DollarSign size={22} />, color: '#d4af37', bg: 'rgba(212,175,55,0.1)', path: '/admin/finances' },
     ];
   }, [state.appointments]);
 
@@ -52,7 +52,7 @@ export default function Dashboard() {
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.4rem' }}>مرحباً بعودتك، <span className="shimmer-text">المدير</span> 👋</h1>
-          <p style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>إليك نظرة عامة على نشاط صالون صدام العالمي اليوم</p>
+          <p style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>إليك نظرة عامة على نشاط {state?.salon?.name || 'صالوننا'} اليوم</p>
         </div>
         <button className="btn-gold" onClick={() => navigate('/admin/appointments')} style={{ boxShadow: '0 4px 20px rgba(212,175,55,0.2)' }}>
           <Calendar size={17} /> موعد جديد
@@ -142,7 +142,7 @@ export default function Dashboard() {
                     </td>
                     <td data-label="الحلاق" style={{ color: 'var(--muted)', fontSize: '0.9rem', fontWeight: 600 }}>{getBarberName(apt.barberId)}</td>
                     <td data-label="الخدمات" style={{ color: 'var(--muted)', fontSize: '0.85rem', maxWidth: 200, lineHeight: 1.4 }}>{getServiceNames(apt.services)}</td>
-                    <td data-label="الإجمالي" style={{ color: 'var(--gold)', fontWeight: 900, fontSize: '1.05rem' }}>${apt.totalPrice}</td>
+                    <td data-label="الإجمالي" style={{ color: 'var(--gold)', fontWeight: 900, fontSize: '1.05rem' }}>{apt.totalDuration} د</td>
                     <td data-label="الحالة">{statusBadge(apt.status)}</td>
                     <td data-label="إجراء">
                       <div className="actions" style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>

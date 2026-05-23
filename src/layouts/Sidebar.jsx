@@ -35,7 +35,7 @@ export default function Sidebar() {
     { name: 'الإعدادات', icon: <Settings size={19} />, path: '/admin/settings' },
   ];
 
-  const { logout, auth } = useApp();
+  const { logout, auth, state } = useApp();
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -57,7 +57,7 @@ export default function Sidebar() {
         </div>
                 {!isCollapsed && (
           <div className="brand-text" style={{ transition: 'opacity 0.3s' }}>
-            <div style={{ fontSize: '1.1rem', fontWeight: 900, lineHeight: 1.2, color: 'var(--text)' }}>صدام العالمي</div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 900, lineHeight: 1.2, color: 'var(--text)' }}>{state?.salon?.name || 'صدام العالمي'}</div>
             <div style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 700, letterSpacing: '0.05em' }}>لوحة الإدارة الفاخرة</div>
           </div>
         )}
