@@ -11,11 +11,12 @@ export default function MobileNav() {
   const isStore = location.pathname === '/';
   if (isStore) return null;
 
-  const isAdmin = location.pathname.startsWith('/admin');
+  const isAdminPath = location.pathname.startsWith('/admin');
 
   const { auth, logout } = useApp();
 
-  const navItems = isAdmin
+  // Build mobile nav based on auth state. Show logout when authenticated.
+  const navItems = isAdminPath
     ? [
         { name: 'لوحة التحكم', icon: <LayoutDashboard size={20} />, path: '/admin' },
         { name: 'المواعيد', icon: <Calendar size={20} />, path: '/admin/appointments' },
@@ -31,6 +32,19 @@ export default function MobileNav() {
         { name: 'الخدمات', icon: <Briefcase size={20} />, path: '/services' },
         { name: 'المنتجات', icon: <Store size={20} />, path: '/products' },
       ];
+
+  // If user is authenticated and not already showing admin link, add logout and admin (if owner)
+  if (auth?.isAuthenticated) {
+    // add admin link for owners
+    const isOwner = auth.role === 'owner' || auth.user?.admin || auth.user?.role === 'owner';
+    if (isOwner && !navItems.find(i => i.path === '/admin')) {
+      navItems.unshift({ name: 'لوحة التحكم', icon: <LayoutDashboard size={20} />, path: '/admin' });
+    }
+    // ensure logout exists
+    if (!navItems.find(i => i.action === 'logout')) {
+      navItems.push({ name: 'تسجيل الخروج', icon: <LogOut size={20} />, action: 'logout' });
+    }
+  }
 
   return (
     <nav className="mobile-nav" dir="rtl">

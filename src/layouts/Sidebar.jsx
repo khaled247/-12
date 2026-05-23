@@ -114,14 +114,16 @@ export default function Sidebar() {
           <Store size={18} className="gold" />
           زيارة المتجر
         </button>
-        <button
-          onClick={handleLogout}
-          className="btn-ghost"
-          style={{ width: '100%', justifyContent: 'flex-start', border: 'none', background: 'rgba(239,68,68,0.05)', color: 'var(--danger)' }}
-        >
-          <LogOut size={18} />
-          تسجيل الخروج
-        </button>
+        {auth?.isAuthenticated && (
+          <button
+            onClick={handleLogout}
+            className="btn-ghost"
+            style={{ width: '100%', justifyContent: 'flex-start', border: 'none', background: 'rgba(239,68,68,0.05)', color: 'var(--danger)' }}
+          >
+            <LogOut size={18} />
+            تسجيل الخروج
+          </button>
+        )}
       </div>
     </aside>
   );

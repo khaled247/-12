@@ -28,7 +28,14 @@ export default function Login() {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      const isOwner = user && user.email === OWNER_EMAIL;
+      // check custom claims for admin
+      try {
+        const idTokenResult = await user.getIdTokenResult();
+        if (idTokenResult.claims && idTokenResult.claims.admin) user.admin = true;
+      } catch (e) {
+        // ignore token retrieval errors
+      }
+      const isOwner = (user && user.admin) || (user && user.email === OWNER_EMAIL);
       // save via context
       login({ user, role: isOwner ? 'owner' : 'user' });
       navigate(isOwner ? '/admin' : '/');
@@ -57,7 +64,12 @@ export default function Login() {
     try {
       const result = await signInWithEmailAndPassword(auth, username, password);
       const user = result.user;
-      const isOwner = user && user.email === OWNER_EMAIL;
+      // check custom claims for admin
+      try {
+        const idTokenResult = await user.getIdTokenResult();
+        if (idTokenResult.claims && idTokenResult.claims.admin) user.admin = true;
+      } catch (e) {}
+      const isOwner = (user && user.admin) || (user && user.email === OWNER_EMAIL);
       login({ user, role: isOwner ? 'owner' : 'user' });
       const from = location.state?.from || (isOwner ? '/admin' : '/');
       navigate(from);

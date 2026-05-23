@@ -60,8 +60,12 @@ export default function LandingPage() {
                     <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{auth.user?.email || ''}</div>
                   </div>
                 </div>
-                <button className="btn-ghost btn-sm mobile-hidden" onClick={async () => { await logout(); navigate('/'); }}>
+                {/* Show logout on all viewports including mobile */}
+                <button className="btn-ghost btn-sm" onClick={async () => { await logout(); navigate('/'); }}>
                   تسجيل الخروج
+                </button>
+                <button className="btn-gold btn-sm" onClick={() => navigate('/booking')}>
+                  احجز الآن
                 </button>
               </>
             ) : (
@@ -94,10 +98,15 @@ export default function LandingPage() {
               <button className="btn-gold" onClick={() => navigate('/booking')} style={{ fontSize: '1.05rem', padding: '1rem 2.5rem' }}>
                 <Scissors size={18} /> احجز موعدك الآن
               </button>
+              {auth?.isAuthenticated && (auth.role === 'owner' || auth.user?.admin) && (
+                <button className="btn-ghost" onClick={() => navigate('/admin')} style={{ fontSize: '1.05rem', padding: '1rem 2rem' }}>لوحة التحكم</button>
+              )}
               <a href="#products" className="btn-ghost" style={{ fontSize: '1.05rem', padding: '1rem 2rem' }}>
                 تصفح المنتجات
                               </a>
-                <button className="btn-ghost" onClick={() => navigate('/login')} style={{ fontSize: '1.05rem', padding: '1rem 2rem' }}>تسجيل الدخول</button>
+                { !auth?.isAuthenticated && (
+                  <button className="btn-ghost" onClick={() => navigate('/login')} style={{ fontSize: '1.05rem', padding: '1rem 2rem' }}>تسجيل الدخول</button>
+                )}
             </div>
 
             {/* Mini Stats */}
