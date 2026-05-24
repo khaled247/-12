@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { X, Check, ChevronRight, ChevronLeft, Scissors, Clock, DollarSign, User, Phone, FileText, Star } from 'lucide-react';
+import IconButton from './UI/IconButton';
 
 const CATEGORIES = ['Haircuts', 'Beard', 'Treatments', 'Combos'];
 
@@ -49,7 +50,7 @@ function StepServices({ selected, onToggle, total }) {
         {filtered.map(svc => {
           const isSelected = selected.includes(svc.id);
           return (
-            <div key={svc.id} className={`service-card ${isSelected ? 'selected' : ''}`} onClick={() => onToggle(svc)}>
+            <div key={svc.id} className={`service-card ${isSelected ? 'selected' : ''}`} onClick={() => onToggle(svc)} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(svc); } }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                 <div style={{ fontSize: '1.5rem', width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: 'rgba(212,175,55,0.08)' }}>
                   {svc.image ? <img src={svc.image} alt={svc.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : svc.icon}
@@ -152,6 +153,12 @@ function StepDateTime({ barberId, date, time, totalDuration, onDateChange, onTim
           style={{ colorScheme: 'dark' }} />
       </div>
 
+      <div style={{ marginBottom: '1rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>اختيار وقت مخصص (24 ساعة) — اختياري</label>
+        <input type="time" className="input-field" value={time || ''} onChange={e => onTimeChange(e.target.value)} step="60" min="00:00" max="23:59" />
+        <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '0.25rem' }}>أدخل وقتاً محدداً مثلاً 14:30 أو اختر من الفتحات أدناه.</div>
+      </div>
+
       {date && Object.entries(sessions).map(([session, slots]) => (
         <div key={session} style={{ marginBottom: '1.25rem' }}>
           <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.6rem' }}>{session}</div>
@@ -159,7 +166,11 @@ function StepDateTime({ barberId, date, time, totalDuration, onDateChange, onTim
             {slots.map(slot => {
               const busy = isBooked(slot);
               return (
-                <div key={slot} onClick={() => !busy && onTimeChange(slot)}
+                    <div key={slot}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && !busy) { e.preventDefault(); onTimeChange(slot); } }}
+                      onClick={() => !busy && onTimeChange(slot)}
                   className={`time-slot ${time === slot ? 'selected' : ''} ${busy ? 'booked' : ''}`}>
                   {slot}
                 </div>
@@ -345,14 +356,22 @@ export default function BookingWizard({ onClose, onSuccess }) {
     setStep(3);
   };
 
+  const modalRef = useRef(null);
+  useEffect(() => {
+    const el = modalRef.current;
+    if (el) el.focus();
+    const prev = document.activeElement;
+    return () => { prev?.focus?.(); };
+  }, []);
+
   return (
     <div className="modal-backdrop" onClick={e => { if (window.innerWidth >= 768 && e.target === e.currentTarget) onClose(); }}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label="Booking wizard" style={{ maxWidth: 640, width: '100%' }}>
+      <div ref={modalRef} tabIndex={-1} className="modal" role="dialog" aria-modal="true" aria-label="Booking wizard" style={{ maxWidth: 640, width: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', direction: 'rtl' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>
             <span className="gold">احجز</span> موعدك
           </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}><X size={22} /></button>
+          <IconButton onClick={onClose} title="إغلاق"><X size={22} /></IconButton>
         </div>
 
         <StepIndicator current={step} />
@@ -373,7 +392,7 @@ export default function BookingWizard({ onClose, onSuccess }) {
             <p style={{ color: 'var(--muted)', marginBottom: '1rem' }}>رقم الحجز: <strong>{successApt?.id}</strong></p>
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }}>
               <button className="btn-ghost" onClick={() => { setSuccess(false); onClose(); }} style={{ padding: '0.85rem 1.25rem', fontSize: '1rem' }}>اغلاق</button>
-              <button className="btn-gold" onClick={() => { /* could navigate to appointment details */ onClose(); }} style={{ padding: '0.85rem 1.25rem', fontSize: '1rem' }}>عرض الحجز</button>
+              <button className="btn-gold" onClick={() => { setSuccess(false); onClose(); navigate('/receipts'); }} style={{ padding: '0.85rem 1.25rem', fontSize: '1rem' }}>عرض الحجز</button>
             </div>
           </div>
         ) : (

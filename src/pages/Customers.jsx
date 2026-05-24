@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Search, Users, ArrowLeft, Phone, Calendar, Star } from 'lucide-react';
 import { X } from 'lucide-react';
+import IconButton from '../components/UI/IconButton';
+import EntityGrid from '../components/EntityGrid';
 
 export default function Customers() {
   const { state } = useApp();
@@ -45,14 +47,21 @@ export default function Customers() {
     return { label: 'عادي', color: 'var(--muted)' };
   };
 
+  const modalRef = useRef(null);
+  useEffect(() => {
+    if (selected && modalRef.current) modalRef.current.focus();
+    const prev = document.activeElement;
+    return () => { prev?.focus?.(); };
+  }, [selected]);
+
   return (
     <div style={{ padding: '2rem', direction: 'rtl' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={() => navigate(-1)} className="btn-ghost btn-sm" style={{ padding: '0.6rem', borderRadius: '50%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <IconButton onClick={() => navigate(-1)} title="عودة">
             <ArrowLeft size={18} />
-          </button>
+          </IconButton>
           <div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 900 }}>العملاء</h1>
             <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>{customers.length} عميل مسجّل في النظام</p>
@@ -73,11 +82,12 @@ export default function Customers() {
           <p>لا يوجد عملاء مطابقون للبحث</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.25rem' }}>
-          {customers.map((c, i) => {
+        <EntityGrid
+          items={customers}
+          renderItem={(c, i) => {
             const membership = getMembershipLabel(c.visits);
             return (
-              <div key={i} className="glass animate-in" style={{ padding: '1.5rem', animationDelay: `${i * 0.05}s`, cursor: 'pointer' }} onClick={() => setSelected(c)}>
+              <div className="glass animate-in" style={{ padding: '1.5rem', animationDelay: `${i * 0.05}s`, cursor: 'pointer' }} role="button" tabIndex={0} onClick={() => setSelected(c)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(c); } }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
                     <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(212,175,55,0.08)', border: '1.5px solid rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.35rem', fontWeight: 800 }}>
@@ -107,23 +117,23 @@ export default function Customers() {
                 </div>
               </div>
             );
-          })}
-        </div>
+          }}
+        />
       )}
 
       {/* Customer Detail Modal */}
       {selected && (
         <div role="dialog" aria-modal="true" className="glass" style={{ position: 'fixed', inset: 0, margin: 'auto', maxWidth: 920, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.25rem', zIndex: 1200 }}>
-          <div style={{ width: '100%', maxHeight: '96vh', overflow: 'auto', borderRadius: 12, padding: '1rem' }} dir="rtl">
+          <div ref={modalRef} tabIndex={-1} style={{ width: '100%', maxHeight: '96vh', overflow: 'auto', borderRadius: 12, padding: '1rem' }} dir="rtl">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
               <div>
                 <div style={{ fontWeight: 900, fontSize: '1.1rem' }}>{selected.name}</div>
                 <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{selected.phone}</div>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <a href={`tel:${selected.phone}`} className="btn-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}><Phone size={16} />اتصال</a>
-                <a href={`sms:${selected.phone}`} className="btn-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}><Phone size={16} />رسالة</a>
-                <button onClick={() => setSelected(null)} className="btn-ghost" aria-label="اغلاق"><X size={16} /></button>
+                <a href={`tel:${selected.phone}`} className="btn-gold" aria-label={`اتصال بـ ${selected.name}`}><Phone size={16} />اتصال</a>
+                <a href={`sms:${selected.phone}`} className="btn-ghost" aria-label={`إرسال رسالة إلى ${selected.name}`}><Phone size={16} />رسالة</a>
+                <IconButton onClick={() => setSelected(null)} aria-label="اغلاق"><X size={16} /></IconButton>
               </div>
             </div>
 

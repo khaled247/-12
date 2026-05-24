@@ -1,10 +1,13 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 
 export default function MyReceipts(){
   const { auth, getUserReceipts, clearUserReceipts } = useApp();
   const key = auth?.user?.email || auth?.user?.phone || 'guest';
   const receipts = getUserReceipts(key);
+  const { state } = useApp();
+  const navigate = useNavigate();
 
   const download = (r) => {
     try {
@@ -15,7 +18,7 @@ export default function MyReceipts(){
       a.download = `receipt_${r.id}.json`;
       document.body.appendChild(a);
       a.click();
-+      a.remove();
+      a.remove();
       URL.revokeObjectURL(url);
     } catch (e) { console.warn(e); }
   };
@@ -32,12 +35,18 @@ export default function MyReceipts(){
       <div style={{marginTop:12}}>
         {receipts.map(r => (
           <div key={r.id} style={{border:'1px solid #eee',padding:12,borderRadius:8,marginTop:10}}>
+            {((r.salon && r.salon.logo) || state?.salon?.logo) && (
+              <div style={{marginBottom:8}}>
+                <img src={(r.salon && r.salon.logo) || state?.salon?.logo} alt="logo" style={{height:48,objectFit:'contain'}} />
+              </div>
+            )}
             <div><strong>رقم الحجز:</strong> {r.id}</div>
             <div><strong>الصالون:</strong> {r.salon?.name}</div>
             <div><strong>التاريخ:</strong> {r.date} {r.time || ''}</div>
             <div><strong>الخدمات:</strong> {(r.services || []).join(', ')}</div>
             <div style={{marginTop:8}}>
               <button onClick={() => download(r)}>تنزيل</button>
+              <button style={{marginLeft:8}} onClick={() => navigate('/booking', { state: { aptId: r.id, edit: true } })}>تعديل الحجز</button>
             </div>
           </div>
         ))}

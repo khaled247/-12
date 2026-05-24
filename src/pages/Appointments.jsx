@@ -1,7 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Search, Calendar, CheckCircle, XCircle, Clock, ArrowLeft, Filter } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
+import Table from '../components/Table';
+import Button from '../components/UI/Button';
+import IconButton from '../components/UI/IconButton';
+import RowActions from '../components/UI/RowActions';
 
 export default function Appointments() {
   const { state, dispatch, completeAppointment } = useApp();
@@ -133,90 +137,42 @@ export default function Appointments() {
         />
       </div>
 
-      {/* Table */}
       <div className="glass" style={{ padding: '0' }}>
-        {filtered.length === 0 ? (
-          <div className="empty-state" style={{ textAlign: 'center', color: 'var(--muted)' }}>
-            <Calendar size={48} style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
-            <p>لا توجد مواعيد تطابق البحث</p>
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>العميل</th>
-                  <th>التاريخ والوقت</th>
-                  <th>الحلاق</th>
-                  <th>الخدمات</th>
-                  <th>المدة</th>
-                  <th>ملاحظة</th>
-                  <th>الحالة</th>
-                  <th style={{ textAlign: 'right' }}>إجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(apt => (
-                  <tr key={apt.id}
-                      draggable={!!apt.queueNumber}
-                      onDragStart={apt.queueNumber ? (e) => onDragStart(e, apt) : undefined}
-                      onDragEnd={apt.queueNumber ? onDragEnd : undefined}
-                      onDragOver={apt.queueNumber ? onDragOverRow : undefined}
-                      onDragLeave={apt.queueNumber ? onDragLeaveRow : undefined}
-                      onDrop={apt.queueNumber ? (e) => onDropOnRow(e, apt) : undefined}
-                      style={apt.queueNumber ? { cursor: 'grab' } : {}}
-                  >
-                    <td data-label="العميل">
-                      <div style={{ fontWeight: 700 }}>{apt.customerName}</div>
-                      <div style={{ color: 'var(--muted)', fontSize: '0.78rem' }}>{apt.customerPhone}</div>
-                    </td>
-                    <td data-label="التاريخ والوقت">
-                      <div style={{ fontWeight: 600 }}>{apt.date}</div>
-                      <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.9rem' }}>{apt.time}</div>
-                    </td>
-                    <td data-label="الحلاق" style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{getBarberName(apt.barberId)}</td>
-                    <td data-label="الخدمات" style={{ color: 'var(--muted)', fontSize: '0.85rem', maxWidth: 180 }}>{getServiceNames(apt.services)}</td>
-                    <td data-label="المدة" style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>{apt.totalDuration} د</td>
-                    <td data-label="ملاحظة" style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>{apt.notes || '—'}</td>
-                    <td data-label="الحالة">{statusBadge(apt.status)}</td>
-                    <td data-label="إجراء">
-                      <div className="actions" style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        {apt.status === 'confirmed' && (
-                          <button onClick={() => changeStatus(apt.id, 'completed')}
-                            style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--success)', border: 'none', padding: '0.4rem 0.7rem', borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                            ✓ أكمل
-                          </button>
-                        )}
-                        {typeof apt.queueNumber === 'number' && (
-                          <>
-                            <button onClick={() => moveToTop(apt)}
-                              style={{ background: 'rgba(59,130,246,0.08)', color: '#2563eb', border: 'none', padding: '0.4rem 0.6rem', borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}>
-                              أول
-                            </button>
-                            <button onClick={() => moveToBottom(apt)}
-                              style={{ background: 'rgba(17,24,39,0.06)', color: '#111827', border: 'none', padding: '0.4rem 0.6rem', borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}>
-                              آخر
-                            </button>
-                          </>
-                        )}
-                        {apt.status !== 'cancelled' && (
-                          <button onClick={() => changeStatus(apt.id, 'cancelled')}
-                            style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', border: 'none', padding: '0.4rem 0.6rem', borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}>
-                            إلغاء
-                          </button>
-                        )}
-                        <button onClick={() => deleteApt(apt.id)}
-                          style={{ background: 'rgba(239,68,68,0.06)', color: 'var(--danger)', border: 'none', padding: '0.4rem 0.6rem', borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem' }}>
-                          ✕
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <Table
+          columns={[
+            { key: 'customer', label: 'العميل', sortable: true, render: (v, row) => (
+                <div>
+                  <div style={{ fontWeight: 700 }}>{row.customerName}</div>
+                  <div style={{ color: 'var(--muted)', fontSize: '0.78rem' }}>{row.customerPhone}</div>
+                </div>
+              )
+            },
+            { key: 'datetime', label: 'التاريخ والوقت', sortable: true, render: (v, row) => (
+                <div>
+                  <div style={{ fontWeight: 600 }}>{row.date}</div>
+                  <div style={{ color: 'var(--gold)', fontWeight: 700, fontSize: '0.9rem' }}>{row.time}</div>
+                </div>
+              )
+            },
+            { key: 'barber', label: 'الحلاق', sortable: true, render: (v, row) => <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{getBarberName(row.barberId)}</div> },
+            { key: 'services', label: 'الخدمات', render: (v, row) => <div style={{ color: 'var(--muted)', fontSize: '0.85rem', maxWidth: 220 }}>{getServiceNames(row.services)}</div> },
+            { key: 'duration', label: 'المدة', sortable: true, render: (v, row) => <div style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>{row.totalDuration} د</div> },
+            { key: 'notes', label: 'ملاحظة', render: (v, row) => <div style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>{row.notes || '—'}</div> },
+            { key: 'status', label: 'الحالة', render: (v, row) => statusBadge(row.status) },
+            { key: 'actions', label: 'إجراءات', align: 'left', render: (v, row) => (
+                <RowActions actions={[
+                  row.status === 'confirmed' ? { key: 'complete', label: '✓ أكمل', onClick: () => changeStatus(row.id, 'completed'), variant: 'ghost' } : null,
+                  typeof row.queueNumber === 'number' ? { key: 'top', label: 'أول', onClick: () => moveToTop(row), variant: 'ghost' } : null,
+                  typeof row.queueNumber === 'number' ? { key: 'bottom', label: 'آخر', onClick: () => moveToBottom(row), variant: 'ghost' } : null,
+                  row.status !== 'cancelled' ? { key: 'cancel', label: 'إلغاء', onClick: () => changeStatus(row.id, 'cancelled'), variant: 'ghost' } : null,
+                  { key: 'delete', type: 'icon', icon: '✕', title: 'حذف', onClick: () => deleteApt(row.id) }
+                ].filter(Boolean)} />
+              ) }
+          ]}
+          data={filtered}
+          pageSize={12}
+          idKey={'id'}
+        />
       </div>
     </div>
   );

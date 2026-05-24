@@ -1,18 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, User, Scissors } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function Booking() {
   const navigate = useNavigate();
-  const { state, createAppointment, createQueueTicket, timeSlots, isSlotAvailable, auth } = useApp();
+  const { state, createAppointment, createQueueTicket, timeSlots, isSlotAvailable, isSlotAvailableExcluding, auth, updateAppointment } = useApp();
   const [date, setDate] = useState('');
   const location = useLocation();
   const [barberId, setBarberId] = useState(location.state?.barberId || '');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [serviceId, setServiceId] = useState('');
+  const [time, setTime] = useState('');
   const [confirmedApt, setConfirmedApt] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const aptId = location.state?.aptId;
+
+  useEffect(() => {
+    if (location.state?.edit && aptId) {
+      const apt = state.appointments.find(a => a.id === aptId);
+      if (apt) {
+        setDate(apt.date || '');
+        setBarberId(apt.barberId || '');
+        setServiceId((apt.services && apt.services[0]) || '');
+        setTime(apt.time || '');
+        setCustomerName(apt.customerName || '');
+        setCustomerPhone(apt.customerPhone || '');
+        setEditing(true);
+      }
+    }
+  }, [location.state, aptId, state.appointments]);
 
   // Check if user is logged in via context
   const isAuth = auth?.isAuthenticated;
@@ -38,6 +56,35 @@ export default function Booking() {
     // find earliest available time slot for chosen barber on date
     const chosenBarber = barberId || (state.barbers[0] && state.barbers[0].id);
     const available = timeSlots.find(slot => isSlotAvailable(chosenBarber, date, slot, totalDuration));
+    // if user selected a specific time, prefer that
+    if (time) {
+      // if editing, allow checking excluding this apt id
+      if (editing && aptId) {
+        try {
+          const apt = updateAppointment({ ...(state.appointments.find(a => a.id === aptId) || {}), barberId: chosenBarber, services: [serviceId], date, time, totalDuration, customerName, customerPhone });
+          setConfirmedApt(apt);
+          return;
+        } catch (e) { if (e.message) return alert(e.message); }
+      } else {
+        // creating new appointment with selected time
+        try {
+          const apt = createAppointment({ barberId: chosenBarber, services: [serviceId], date, time, totalPrice: selectedService.price, totalDuration, customerName: customerName, customerPhone: customerPhone, customerEmail, notes: '' });
+          setConfirmedApt(apt);
+          return;
+        } catch (e) { if (e.message) return alert(e.message); }
+      }
+    }
+    if (editing && aptId) {
+      const orig = state.appointments.find(a => a.id === aptId);
+      if (!orig) return alert('الحجز غير موجود');
+      const updated = { ...orig, barberId: chosenBarber, services: [serviceId], date, customerName: customerName, customerPhone: customerPhone };
+      try {
+        updateAppointment(updated);
+        setConfirmedApt(updated);
+        return;
+      } catch (e) { if (e.message) return alert(e.message); }
+    }
+
     if (available) {
       try {
         const apt = createAppointment({ barberId: chosenBarber, services: [serviceId], date, time: available, totalPrice: selectedService.price, totalDuration, customerName: customerName, customerPhone: customerPhone, customerEmail, notes: '' });
@@ -101,7 +148,8 @@ export default function Booking() {
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button className="btn-gold" onClick={() => { navigate('/'); }} style={{ padding: '0.7rem 1rem' }}>العودة للرئيسية</button>
-                <button className="btn-ghost" onClick={() => { setConfirmedApt(null); }} style={{ padding: '0.7rem 1rem' }}>أغلق</button>
+                  <button className="btn-ghost" onClick={() => { setConfirmedApt(null); }} style={{ padding: '0.7rem 1rem' }}>أغلق</button>
+                  <button className="btn-ghost" onClick={() => { navigate('/receipts'); }} style={{ padding: '0.7rem 1rem' }}>عرض الحجز</button>
               </div>
             </div>
           </div>
@@ -125,6 +173,48 @@ export default function Booking() {
             </label>
             <input type="date" className="input-field" value={date} onChange={e => setDate(e.target.value)} min={new Date().toISOString().split('T')[0]} required />
           </div>
+
+          <div>
+            <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem', fontWeight: 700 }}>
+              <Clock size={16} className="gold" /> الوقت (اختياري)
+            </label>
+            <input type="time" className="input-field" value={time} onChange={e => setTime(e.target.value)} step="60" min="00:00" max="23:59" />
+            <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '0.35rem' }}>يمكنك إدخال وقت منسق بنظام 24 ساعة (مثال: 14:30)</div>
+          </div>
+
+          {date && serviceId && (
+            (() => {
+              const selectedService = state.services.find(s => s.id === serviceId) || {};
+              const totalDuration = selectedService.duration || 30;
+              const slots = timeSlots.filter(s => { const h = Number(s.split(':')[0]); return h >= 9 && h < 20; });
+              const sessions = {
+                'الصباح (9AM–12PM)': slots.filter(s => { const h = Number(s.split(':')[0]); return h >= 9 && h < 12; }),
+                'بعد الظهر (12PM–5PM)': slots.filter(s => { const h = Number(s.split(':')[0]); return h >= 12 && h < 17; }),
+                'المساء (5PM–9PM)': slots.filter(s => { const h = Number(s.split(':')[0]); return h >= 17 && h < 20; }),
+              };
+              return (
+                <div style={{ marginTop: '1rem' }}>
+                  <div style={{ color: 'var(--muted)', marginBottom: '0.5rem', fontWeight: 700 }}>اختر الوقت (اختياري)</div>
+                  {Object.entries(sessions).map(([label, sls]) => (
+                    <div key={label} style={{ marginBottom: '0.75rem' }}>
+                      <div style={{ color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.5rem' }}>{label}</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '0.4rem' }}>
+                        {sls.map(slot => {
+                          const busy = editing && aptId ? !isSlotAvailableExcluding(barberId || (state.barbers[0] && state.barbers[0].id), date, slot, totalDuration, aptId) : !isSlotAvailable(barberId || (state.barbers[0] && state.barbers[0].id), date, slot, totalDuration);
+                          return (
+                            <div key={slot} onClick={() => { if (!busy) setTime(slot); }}
+                              className={`time-slot ${time === slot ? 'selected' : ''} ${busy ? 'booked' : ''}`}>
+                              {slot}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()
+          )}
 
           {/* الزمن يحدد تلقائياً، لا حاجة لاختيار الوقت */}
 

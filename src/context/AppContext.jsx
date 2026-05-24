@@ -60,6 +60,11 @@ function appReducer(state, action) {
           a.id === action.payload.id ? { ...a, status: action.payload.status } : a
         )
       };
+    case 'UPDATE_APPOINTMENT':
+      return {
+        ...state,
+        appointments: state.appointments.map(a => a.id === action.payload.id ? { ...a, ...action.payload } : a)
+      };
     case 'DELETE_APPOINTMENT':
       return { ...state, appointments: state.appointments.filter(a => a.id !== action.payload) };
     case 'SET_APPOINTMENTS':
@@ -108,7 +113,7 @@ export function AppProvider({ children }) {
     appointments: saved?.appointments ?? SAMPLE_APPOINTMENTS,
     services: saved?.services ?? INITIAL_SERVICES,
     barbers: saved?.barbers ?? INITIAL_BARBERS,
-    salon: saved?.salon ?? { name: 'صدام العالمي', phone: '+966 50 123 4567', address: 'طريق الملك فهد، الرياض، المملكة العربية السعودية' },
+    salon: saved?.salon ?? { name: 'صدام العالمي', phone: '+966 50 123 4567', address: 'طريق الملك فهد، الرياض، المملكة العربية السعودية', logo: '/logo.png' },
   });
 
   // Authentication state (simple client-side wrapper)
@@ -271,6 +276,34 @@ export function AppProvider({ children }) {
     return true;
   };
 
+  const isSlotAvailableExcluding = (barberId, date, time, duration, excludeId) => {
+    // build booked slots excluding a specific appointment id
+    const booked = state.appointments
+      .filter(a => a.id !== excludeId && a.barberId === barberId && a.date === date && a.status !== 'cancelled')
+      .map(a => {
+        const slots = [];
+        const [h, m] = (a.time || '').split(':').map(Number);
+        if (!a.time) return slots;
+        let total = h * 60 + m;
+        const end = total + a.totalDuration;
+        while (total < end) {
+          slots.push(`${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`);
+          total += SLOT_DURATION;
+        }
+        return slots;
+      }).flat();
+
+    const [h, m] = time.split(':').map(Number);
+    let t = h * 60 + m;
+    const end = t + duration;
+    while (t < end) {
+      const slot = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+      if (booked.includes(slot)) return false;
+      t += SLOT_DURATION;
+    }
+    return true;
+  };
+
   const hasExistingBooking = (customerPhone, customerEmail) => {
     if (!customerPhone && !customerEmail) return false;
     const today = new Date().toISOString().split('T')[0];
@@ -301,6 +334,26 @@ export function AppProvider({ children }) {
       localStorage.setItem('royalcuts_receipts', JSON.stringify(receipts));
     } catch (e) { console.warn('failed to persist receipt', e); }
     return newApt;
+  };
+
+  const updateAppointment = (updated) => {
+    try {
+      // if appointment includes time & duration, ensure slot is available excluding this appointment
+      if (updated.time && updated.totalDuration) {
+        const ok = isSlotAvailableExcluding(updated.barberId, updated.date, updated.time, updated.totalDuration, updated.id);
+        if (!ok) throw new Error('This time slot is already booked. Please choose another time.');
+      }
+      dispatch({ type: 'UPDATE_APPOINTMENT', payload: updated });
+      // update stored receipt for this user if present
+      const raw = localStorage.getItem('royalcuts_receipts');
+      const receipts = raw ? JSON.parse(raw) : {};
+      const key = auth?.user?.email || auth?.user?.phone || 'guest';
+      if (receipts[key]) {
+        receipts[key] = receipts[key].map(r => r.id === updated.id ? { ...r, ...updated, salon: state.salon } : r);
+        localStorage.setItem('royalcuts_receipts', JSON.stringify(receipts));
+      }
+    } catch (e) { console.warn('failed to persist updated receipt', e); throw e; }
+    return updated;
   };
 
   // --- Queue and barber workflow helpers ---
@@ -459,6 +512,7 @@ export function AppProvider({ children }) {
     <AppContext.Provider value={{
       state, dispatch,
       getBookedSlots, isSlotAvailable, createAppointment,
+      isSlotAvailableExcluding,
       // queue/workflow helpers
       completeAppointment, createQueueTicket, sendWhatsApp,
       timeSlots: generateTimeSlots(),
@@ -476,6 +530,7 @@ export function AppProvider({ children }) {
       // receipts
       getUserReceipts,
       clearUserReceipts,
+      updateAppointment,
       // queue reorder
       reorderQueue,
     }}>

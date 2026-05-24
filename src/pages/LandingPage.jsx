@@ -64,6 +64,9 @@ export default function LandingPage() {
                 <button className="btn-ghost btn-sm" onClick={async () => { await logout(); navigate('/'); }}>
                   تسجيل الخروج
                 </button>
+                <button className="btn-ghost btn-sm" onClick={() => navigate('/receipts')}>
+                  حجوزاتي
+                </button>
                 <button className="btn-gold btn-sm" onClick={() => navigate('/booking')}>
                   احجز الآن
                 </button>
@@ -98,6 +101,9 @@ export default function LandingPage() {
               <button className="btn-gold" onClick={() => navigate('/booking')} style={{ fontSize: '1.05rem', padding: '1rem 2.5rem' }}>
                 <Scissors size={18} /> احجز موعدك الآن
               </button>
+              {auth?.isAuthenticated && (
+                <button className="btn-ghost" onClick={() => navigate('/receipts')} style={{ fontSize: '1.05rem', padding: '1rem 2rem' }}>حجوزاتي</button>
+              )}
               {auth?.isAuthenticated && (auth.role === 'owner' || auth.user?.admin) && (
                 <button className="btn-ghost" onClick={() => navigate('/admin')} style={{ fontSize: '1.05rem', padding: '1rem 2rem' }}>لوحة التحكم</button>
               )}

@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { ArrowLeft, UserPlus, Star, Edit2, Trash2, Clock, X } from 'lucide-react';
+import IconButton from '../components/UI/IconButton';
+import Button from '../components/UI/Button';
+import RowActions from '../components/UI/RowActions';
+import EntityGrid from '../components/EntityGrid';
 import ImageUploader from '../components/ImageUploader';
+import ModalWrapper from '../components/UI/ModalWrapper';
 
 function BarberModal({ barber, onClose, onSave }) {
   const [formData, setFormData] = useState(
@@ -18,11 +23,10 @@ function BarberModal({ barber, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: 500, direction: 'rtl' }}>
+    <div className="modal" role="dialog" aria-modal="true" aria-label={barber ? 'تعديل بيانات الحلاق' : 'إضافة حلاق جديد'} tabIndex={-1} style={{ maxWidth: 500, direction: 'rtl' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{barber ? 'تعديل بيانات الحلاق' : 'إضافة حلاق جديد'}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}><X size={22} /></button>
+          <IconButton onClick={onClose} title="إغلاق"><X size={22} /></IconButton>
         </div>
         
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -78,7 +82,12 @@ function BarberModal({ barber, onClose, onSave }) {
             <label>اللون المميز</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {['#D4AF37', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444'].map(color => (
-                <div key={color} onClick={() => setFormData({ ...formData, color })}
+                <div key={color}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFormData({ ...formData, color }); } }}
+                  onClick={() => setFormData({ ...formData, color })}
+                  aria-label={`اختر اللون ${color}`}
                   style={{ width: 36, height: 36, borderRadius: '50%', background: color, cursor: 'pointer', border: formData.color === color ? '3px solid #fff' : '3px solid transparent', boxShadow: formData.color === color ? '0 0 0 2px var(--gold)' : 'none' }} />
               ))}
             </div>
@@ -130,33 +139,33 @@ export default function Staff() {
     <div style={{ padding: '2rem', direction: 'rtl' }}>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={() => navigate(-1)} className="btn-ghost btn-sm" style={{ padding: '0.6rem', borderRadius: '50%' }}>
+          <IconButton onClick={() => navigate(-1)} title="عودة">
             <ArrowLeft size={18} />
-          </button>
+          </IconButton>
           <div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 900 }}>فريق العمل</h1>
             <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>إدارة بيانات الحلاقين وأوقات الدوام</p>
           </div>
         </div>
-        <button className="btn-gold" onClick={openNew}>
-          <UserPlus size={17} /> إضافة حلاق
-        </button>
+        <Button variant="gold" onClick={openNew}><UserPlus size={17} /> إضافة حلاق</Button>
       </div>
 
-      <div className="staff-grid" style={{ gap: '1.5rem', display: 'grid' }}>
-        {state.barbers.map((b, i) => (
-          <div key={b.id} className="glass animate-in" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', animationDelay: `${i * 0.08}s` }}>
+      <EntityGrid
+        title={null}
+        description={null}
+        items={state.barbers}
+        createProps={{ onClick: openNew, variant: 'gold', children: (<><UserPlus size={17} /> إضافة حلاق</>) }}
+        renderItem={(b, i) => (
+          <div className="glass animate-in" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', animationDelay: `${i * 0.08}s` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
               <div style={{ width: 64, height: 64, borderRadius: 16, background: `${b.color}18`, border: `2px solid ${b.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', overflow: 'hidden' }}>
                 {b.image ? <img src={b.image} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '💈'}
               </div>
               <div style={{ display: 'flex', gap: '0.4rem' }}>
-                <button onClick={() => openEdit(b)} style={{ background: 'rgba(59,130,246,0.08)', color: 'var(--info)', border: 'none', padding: '0.45rem', borderRadius: 8, cursor: 'pointer' }}>
-                  <Edit2 size={15} />
-                </button>
-                <button onClick={() => handleDelete(b.id)} style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--danger)', border: 'none', padding: '0.45rem', borderRadius: 8, cursor: 'pointer' }}>
-                  <Trash2 size={15} />
-                </button>
+                <RowActions actions={[
+                  { key: 'edit', type: 'icon', icon: <Edit2 size={15} />, title: 'تعديل', onClick: () => openEdit(b) },
+                  { key: 'delete', type: 'icon', icon: <Trash2 size={15} />, title: 'حذف', onClick: () => handleDelete(b.id) }
+                ]} />
               </div>
             </div>
 
@@ -183,15 +192,17 @@ export default function Staff() {
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        )}
+      />
 
       {isModalOpen && (
-        <BarberModal
-          barber={editingBarber}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSave}
-        />
+        <ModalWrapper onClose={() => setIsModalOpen(false)} ariaLabel={editingBarber ? 'تعديل بيانات الحلاق' : 'إضافة حلاق جديد'}>
+          <BarberModal
+            barber={editingBarber}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSave}
+          />
+        </ModalWrapper>
       )}
     </div>
   );

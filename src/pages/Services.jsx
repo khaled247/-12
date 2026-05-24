@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import ImageUploader from '../components/ImageUploader';
+import ModalWrapper from '../components/UI/ModalWrapper';
 import { ArrowLeft, Plus, Store, X, Edit2, Trash2, Clock, Scissors } from 'lucide-react';
 
 
@@ -16,11 +17,10 @@ function ServiceModal({ service, onClose, onSave, categories }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: 500, direction: 'rtl' }}>
+    <div className="modal" role="dialog" aria-modal="true" aria-label={service ? 'تعديل الخدمة' : 'خدمة جديدة'} tabIndex={-1} style={{ maxWidth: 500, direction: 'rtl' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{service ? 'تعديل الخدمة' : 'خدمة جديدة'}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}><X size={22} /></button>
+          <button onClick={onClose} aria-label="إغلاق" style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}><X size={22} /></button>
         </div>
         
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -178,12 +178,14 @@ export default function Services() {
       </div>
 
       {isModalOpen && (
-        <ServiceModal
-          service={editingService}
-          categories={categories}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSave}
-        />
+        <ModalWrapper onClose={() => setIsModalOpen(false)} ariaLabel={editingService ? 'تعديل الخدمة' : 'خدمة جديدة'}>
+          <ServiceModal
+            service={editingService}
+            categories={categories}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSave}
+          />
+        </ModalWrapper>
       )}
     </div>
   );

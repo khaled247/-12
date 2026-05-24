@@ -42,48 +42,29 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`} dir="rtl" style={{ background: 'var(--bg2)', borderLeft: '1px solid var(--border)', position: 'relative', transition: 'width 0.3s ease' }}>
-      {/* Decorative Glow */}
-      <div style={{ position: 'absolute', top: 0, right: 0, width: '100%', height: '150px', background: 'radial-gradient(ellipse at top, rgba(212,175,55,0.05), transparent)', pointerEvents: 'none' }} />
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`} dir="rtl">
+      <div className="sidebar-glow" />
 
-      {/* Brand */}
-      <div
-        onClick={() => navigate('/')}
-        style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '2.5rem', cursor: 'pointer', padding: '0.5rem', borderRadius: 12, transition: 'all 0.3s' }}
-        className="hover-scale"
-      >
-        <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg, var(--gold), #b38b22)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', flexShrink: 0, boxShadow: '0 4px 15px rgba(212,175,55,0.3)' }}>
-          <Scissors size={20} />
-        </div>
-                {!isCollapsed && (
-          <div className="brand-text" style={{ transition: 'opacity 0.3s' }}>
-            <div style={{ fontSize: '1.1rem', fontWeight: 900, lineHeight: 1.2, color: 'var(--text)' }}>{state?.salon?.name || 'صدام العالمي'}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 700, letterSpacing: '0.05em' }}>لوحة الإدارة الفاخرة</div>
+      <button className="brand" onClick={() => navigate('/')} title="الرئيسية" aria-label="الرئيسية">
+        <div className="brand-icon" aria-hidden><Scissors size={20} /></div>
+        {!isCollapsed && (
+          <div className="brand-text">
+            <div className="brand-name">{state?.salon?.name || 'صدام العالمي'}</div>
+            <div className="brand-sub">لوحة الإدارة الفاخرة</div>
           </div>
         )}
+      </button>
 
-      </div>
-
-      {/* Mobile close (visible when expanded) */}
       <button onClick={() => document.querySelector('.app-shell')?.classList.remove('sidebar-open')} className="mobile-only sidebar-close" aria-label="Close sidebar">
         <X size={18} />
       </button>
 
-      {/* Collapse Toggle */}
-      <button
-        onClick={toggleCollapse}
-        className="btn-ghost"
-        style={{ width: '100%', justifyContent: 'flex-start', padding: '0.5rem 0', background: 'transparent', color: 'var(--muted)', border: 'none', marginBottom: '1rem' }}
-        aria-label="Toggle sidebar"
-      >
+      <button onClick={toggleCollapse} className="collapse-toggle btn-ghost" aria-label="Toggle sidebar">
         <Menu size={18} />
-        <span style={{ marginLeft: '0.5rem', fontWeight: 600 }}>
-          {isCollapsed ? 'توسيع القائمة' : 'تقليل القائمة'}
-        </span>
+        <span className="collapse-label">{isCollapsed ? 'توسيع القائمة' : 'تقليل القائمة'}</span>
       </button>
 
-      {/* Nav */}
-      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+      <nav className="sidebar-nav">
         {menuItems.map((item, i) => (
           <NavLink
             key={i}
@@ -104,26 +85,9 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Bottom Profile & Actions */}
-      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <button
-          onClick={() => navigate('/')}
-          className="btn-ghost"
-          style={{ width: '100%', justifyContent: 'flex-start', border: 'none', background: 'rgba(255,255,255,0.02)', color: 'var(--text)' }}
-        >
-          <Store size={18} className="gold" />
-          زيارة المتجر
-        </button>
-        {auth?.isAuthenticated && (
-          <button
-            onClick={handleLogout}
-            className="btn-ghost"
-            style={{ width: '100%', justifyContent: 'flex-start', border: 'none', background: 'rgba(239,68,68,0.05)', color: 'var(--danger)' }}
-          >
-            <LogOut size={18} />
-            تسجيل الخروج
-          </button>
-        )}
+      <div className="sidebar-footer">
+        <button onClick={() => navigate('/')} className="btn-ghost sidebar-action"> <Store size={18} className="gold" /> زيارة المتجر</button>
+        {auth?.isAuthenticated && (<button onClick={handleLogout} className="btn-ghost sidebar-action danger"> <LogOut size={18} /> تسجيل الخروج</button>)}
       </div>
     </aside>
   );

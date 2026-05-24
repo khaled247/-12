@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { ArrowLeft, Plus, Package, Edit2, Trash2, X } from 'lucide-react';
+import IconButton from '../components/UI/IconButton';
+import Button from '../components/UI/Button';
+import RowActions from '../components/UI/RowActions';
+import EntityGrid from '../components/EntityGrid';
 import ImageUploader from '../components/ImageUploader';
+import ModalWrapper from '../components/UI/ModalWrapper';
 
 function ProductModal({ product, onClose, onSave }) {
   const [formData, setFormData] = useState(
@@ -17,11 +22,10 @@ function ProductModal({ product, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: 500, direction: 'rtl' }}>
+    <div className="modal" role="dialog" aria-modal="true" aria-label={product ? 'تعديل المنتج' : 'إضافة منتج جديد'} tabIndex={-1} style={{ maxWidth: 500, direction: 'rtl' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{product ? 'تعديل المنتج' : 'إضافة منتج جديد'}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }}><X size={22} /></button>
+          <IconButton onClick={onClose} title="إغلاق"><X size={22} /></IconButton>
         </div>
         
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -60,7 +64,6 @@ function ProductModal({ product, onClose, onSave }) {
           </div>
         </form>
       </div>
-    </div>
   );
 }
 
@@ -106,34 +109,34 @@ export default function Products() {
   return (
     <div style={{ padding: '2rem', direction: 'rtl' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={() => navigate(-1)} className="btn-ghost btn-sm" style={{ padding: '0.6rem', borderRadius: '50%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <IconButton onClick={() => navigate(-1)} title="عودة">
             <ArrowLeft size={18} />
-          </button>
+          </IconButton>
           <div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 900 }}>المنتجات</h1>
             <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>إدارة زيوت ودهانات الشعر</p>
           </div>
         </div>
-        <button className="btn-gold" onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}>
+        <Button variant="gold" onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}>
           <Plus size={17} /> إضافة منتج
-        </button>
+        </Button>
       </div>
 
-      <div className="services-grid">
-        {products.map((p, i) => (
-          <div key={p.id} className="glass animate-in" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', animationDelay: `${i * 0.06}s` }}>
+      <EntityGrid
+        items={products}
+        createProps={{ onClick: () => { setEditingProduct(null); setIsModalOpen(true); }, variant: 'gold', children: (<><Plus size={17} /> إضافة منتج</>) }}
+        renderItem={(p, i) => (
+          <div className="glass animate-in" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', animationDelay: `${i * 0.06}s` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
               <div style={{ width: 64, height: 64, borderRadius: 14, background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem', overflow: 'hidden' }}>
                 {p.image ? <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package size={28} className="gold" />}
               </div>
               <div style={{ display: 'flex', gap: '0.4rem' }}>
-                <button onClick={() => { setEditingProduct(p); setIsModalOpen(true); }} style={{ background: 'rgba(59,130,246,0.08)', color: 'var(--info)', border: 'none', padding: '0.45rem', borderRadius: 8, cursor: 'pointer' }}>
-                  <Edit2 size={15} />
-                </button>
-                <button onClick={() => handleDelete(p.id)} style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--danger)', border: 'none', padding: '0.45rem', borderRadius: 8, cursor: 'pointer' }}>
-                  <Trash2 size={15} />
-                </button>
+                <RowActions actions={[
+                  { key: 'edit', type: 'icon', icon: <Edit2 size={15} />, title: 'تعديل', onClick: () => { setEditingProduct(p); setIsModalOpen(true); } },
+                  { key: 'delete', type: 'icon', icon: <Trash2 size={15} />, title: 'حذف', onClick: () => handleDelete(p.id) }
+                ]} />
               </div>
             </div>
 
@@ -146,15 +149,17 @@ export default function Products() {
               </span>
             </div>
           </div>
-        ))}
-      </div>
+        )}
+      />
 
       {isModalOpen && (
-        <ProductModal
-          product={editingProduct}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSave}
-        />
+        <ModalWrapper onClose={() => setIsModalOpen(false)} ariaLabel={editingProduct ? 'تعديل المنتج' : 'إضافة منتج'}>
+          <ProductModal
+            product={editingProduct}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSave}
+          />
+        </ModalWrapper>
       )}
     </div>
   );

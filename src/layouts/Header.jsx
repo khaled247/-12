@@ -3,6 +3,8 @@ import { useLocation, NavLink, useNavigate } from 'react-router-dom';
 import MobileToggle from './MobileToggle';
 import { Bell, Search, User, Users, Users2, DollarSign, Settings, FileText } from 'lucide-react';
 import { LogOut } from 'lucide-react';
+import Button from '../components/UI/Button';
+import IconButton from '../components/UI/IconButton';
 import { useApp } from '../context/AppContext';
 
 export default function Header() {
@@ -34,47 +36,34 @@ export default function Header() {
   return (
     <>
       <header className="admin-header" dir="rtl">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="header-inner">
           <div className="mobile-only">
             <MobileToggle />
           </div>
-        
-          <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>{getPageTitle()}</h2>
-          <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.2rem' }}>
-            {state?.salon?.name || 'صدام العالمي'} / {getPageTitle()}
-          </div>
-        </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          {/* Search */}
-          <div className="mobile-hidden" style={{ position: 'relative' }}>
-            <Search size={16} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
-            <input 
-              type="text" 
-              placeholder="بحث سريع..." 
-              style={{ 
-                background: 'var(--bg2)', 
-                border: '1px solid var(--border)', 
-                borderRadius: '50px', 
-                padding: '0.6rem 2.5rem 0.6rem 1rem',
-                color: 'var(--text)',
-                fontSize: '0.85rem',
-                outline: 'none',
-                width: '200px'
-              }} 
-            />
+          <div className="title-block">
+            <h2>{getPageTitle()}</h2>
+            <div className="title-sub">{state?.salon?.name || 'صدام العالمي'} / {getPageTitle()}</div>
           </div>
 
-          {/* Notifications */}
-          <button style={{ background: 'var(--bg3)', border: '1px solid var(--border)', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)', position: 'relative', cursor: 'pointer' }}>
-            <Bell size={18} />
-            <span style={{ position: 'absolute', top: 8, right: 8, width: 8, height: 8, background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--bg3)' }}></span>
-          </button>
+          <div className="actions">
+            {/* Search */}
+              <div className="mobile-hidden search-input">
+                <Search size={16} className="search-icon" />
+                <input type="text" placeholder="بحث سريع..." className="input-field" />
+              </div>
 
-          {/* Profile + logout */}
-          <ProfileHeader />
-        </div>
+            {/* Notifications */}
+            <IconButton title="الإشعارات" className="notif-btn">
+              <div style={{ position: 'relative' }}>
+                <Bell size={18} />
+                <span className="notif-dot" />
+              </div>
+            </IconButton>
+
+            {/* Profile + logout */}
+            <ProfileHeader />
+          </div>
         </div>
       </header>
 
@@ -84,14 +73,7 @@ export default function Header() {
           <NavLink
             key={item.path}
             to={item.path}
-            className={({ isActive }) => `btn-ghost btn-sm ${isActive ? 'active-mobile-tab' : ''}`}
-            style={({ isActive }) => ({
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              background: isActive ? 'var(--gold)' : 'var(--bg3)',
-              color: isActive ? '#000' : 'var(--muted)',
-              border: isActive ? '1px solid var(--gold)' : '1px solid var(--border)'
-            })}
+            className={({ isActive }) => `mobile-tab ${isActive ? 'active-mobile-tab' : ''}`}
           >
             {item.icon} {item.name}
           </NavLink>
@@ -111,17 +93,15 @@ function ProfileHeader() {
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
-        <User size={18} />
+    <div className="profile-header">
+      <div className="avatar"><User size={18} /></div>
+      <div className="mobile-hidden meta">
+        <div className="name">{auth?.user?.displayName || (auth?.role === 'owner' ? 'المدير' : 'مستخدم')}</div>
+        <div className="sub">{auth?.user?.email || (auth?.role || 'guest')}</div>
       </div>
-      <div className="mobile-hidden" style={{ paddingLeft: '0.5rem', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1 }}>{auth?.user?.displayName || (auth?.role === 'owner' ? 'المدير' : 'مستخدم')}</div>
-        <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{auth?.user?.email || (auth?.role || 'guest')}</div>
-      </div>
-      <button onClick={handleLogout} title="تسجيل الخروج" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem', borderRadius: 10 }}>
+      <IconButton title="تسجيل الخروج" onClick={handleLogout}>
         <LogOut size={16} />
-      </button>
+      </IconButton>
     </div>
   );
 }
